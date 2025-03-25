@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import CartPage from "./Pages/Cart";
 import Shop from "./Pages/Shop";
 import ProductDetails from "./components/Products-Details";
+import CheckoutPage from "./Pages/checkout";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
       <Route path="/cart" element={<CartPage />} />
       <Route path="/shop" element={<Shop/>}/>
       <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="/checkout" element={<CheckoutPage/>}/>
       </Routes>
       <Footer />
     </>

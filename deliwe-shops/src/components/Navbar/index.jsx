@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingCart, User, Menu, X } from "lucide-react";
+import { ShoppingCart, User, Menu, X, ShoppingBagIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -43,6 +43,9 @@ export default function Navbar() {
 
         {/* Desktop Icons */}
         <div className="hidden md:flex items-center gap-4">
+        <Link to="/shop">
+            <ShoppingBagIcon size={24} />
+          </Link>
           <Link to="/cart" className="relative">
             <ShoppingCart size={24} />
             <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-2">2</span>
@@ -64,6 +67,9 @@ export default function Navbar() {
           <Link to="/" className="text-lg font-medium" onClick={() => setMenuOpen(false)}>Home</Link>
           <Link to="/cart" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
             <ShoppingCart size={20} /> Cart
+          </Link>
+          <Link to="/shop" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
+            <ShoppingBagIcon size={20} /> Shop
           </Link>
           <Link to="/profile" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
             <User size={20} /> Profile
