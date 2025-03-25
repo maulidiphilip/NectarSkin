@@ -50,7 +50,7 @@ export default function Navbar() {
             <ShoppingCart size={24} />
             <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-2">2</span>
           </Link>
-          <Link to="/profile">
+          <Link to="/auth">
             <User size={24} />
           </Link>
         </div>
@@ -71,7 +71,7 @@ export default function Navbar() {
           <Link to="/shop" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
             <ShoppingBagIcon size={20} /> Shop
           </Link>
-          <Link to="/profile" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
+          <Link to="/auth" className="flex items-center gap-2" onClick={() => setMenuOpen(false)}>
             <User size={20} /> Profile
           </Link>
           <Input placeholder="Search..." className="w-full" />
