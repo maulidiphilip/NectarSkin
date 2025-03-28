@@ -7,8 +7,12 @@ import Shop from "./Pages/Shop";
 import ProductDetails from "./components/Products-Details";
 import CheckoutPage from "./Pages/checkout";
 import AuthPage from "./Pages/AuthPage";
+import AdminDashboard from "./Pages/admin-view/AdminDashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+import UserDashboard from "./Pages/Customer-view/UserDashboard";
 
 export default function App() {
+
   return (
     <>
       <Navbar />
@@ -18,7 +22,13 @@ export default function App() {
       <Route path="/shop" element={<Shop/>}/>
       <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/checkout" element={<CheckoutPage/>}/>
-      <Route path="/auth" element={<AuthPage/>}/>
+      <Route path="/auth" element={<AuthPage />} />
+        <Route element={<ProtectedRoute allowedRole="admin" />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        </Route>
+        <Route element={<ProtectedRoute allowedRole="user" />}>
+          <Route path="/user/dashboard" element={<UserDashboard />} />
+        </Route>
       </Routes>
       <Footer />
     </>
