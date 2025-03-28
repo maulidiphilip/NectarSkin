@@ -2,7 +2,8 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = "http://localhost:6060";
+// const API_URL = "http://localhost:6060";
+const API_URL = "https://nectarskin-backend.onrender.com";
 // Async Thunks
 export const register = createAsyncThunk(
   "auth/register",
