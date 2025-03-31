@@ -9,11 +9,12 @@ const productRoutes = require("./Routes/Products/product-routes")
 const app = express();
 const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
+const CLIENT_URL = process.env.CLIENT_URL;
 
 // app.use(cors());
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Use specific frontend URL
+  origin: CLIENT_URL, // Use specific frontend URL
   credentials: true // Allow cookies to be sent
 }));
 
