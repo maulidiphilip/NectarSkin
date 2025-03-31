@@ -1,37 +1,34 @@
+// src/components/FeaturedProducts.js
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import jewelry1 from "../../assets/card-1.png";
-import serum from "../../assets/card-2.png";
-import lipstick from "../../assets/card-3.png";
-import lotion from "../../assets/card-5.jpg";
+import { fetchPublicProducts } from "@/store/Product-slice";
 
-const products = [
-  {
-    id: 1,
-    name: "Luxury Gold Necklace",
-    price: 129.99,
-    image: jewelry1,
-  },
-  {
-    id: 2,
-    name: "Hydrating Face Serum",
-    price: 59.99,
-    image: serum,
-  },
-  {
-    id: 3,
-    name: "Velvet Matte Lipstick",
-    price: 19.99,
-    image: lipstick,
-  },
-  {
-    id: 4,
-    name: "Shea Butter Body Lotion",
-    price: 24.99,
-    image: lotion,
-  },
-];
 const FeaturedProducts = () => {
+  const dispatch = useDispatch();
+  const { products, loading, error } = useSelector((state) => state.products);
+
+  useEffect(() => {
+    dispatch(fetchPublicProducts());
+  }, [dispatch]);
+
+  if (loading) {
+    return (
+      <section className="max-w-screen-xl mx-auto px-6 py-16">
+        <div className="text-center">Loading products...</div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="max-w-screen-xl mx-auto px-6 py-16">
+        <div className="text-center text-red-500">Error: {error}</div>
+      </section>
+    );
+  }
+
   return (
     <section className="max-w-screen-xl mx-auto px-6 py-16">
       {/* Section Header */}
@@ -46,33 +43,49 @@ const FeaturedProducts = () => {
 
       {/* Product Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <Link
-            to={`/product/${product.id}`}
-            key={product.id}
-            className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-xl"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-56 object-cover"
-            />
-            <div className="p-4 text-center">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {product.name}
-              </h3>
-              <p className="text-amber-600 font-bold text-xl mt-2">
-            MWK{product.price}
-              </p>
-              <Button className="mt-4 w-full bg-amber-600 hover:bg-amber-700">
-                Buy Now
-              </Button>
-            </div>
-          </Link>
-        ))}
+        {products.length === 0 ? (
+          <p className="text-center text-gray-600 col-span-full">
+            No products available yet.
+          </p>
+        ) : (
+          products.map((product) => (
+            <Link
+              to={`/product/${product._id}`}
+              key={product._id}
+              className="bg-white rounded-lg shadow-md overflow-hidden transform transition duration-300 hover:scale-105 hover:shadow-xl"
+            >
+              <img
+                src={product.imageUrl || "https://via.placeholder.com/300"}
+                alt={product.name}
+                className="w-full h-56 object-cover"
+              />
+              <div className="p-4 text-center">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {product.name}
+                </h3>
+                <p className="text-amber-600 font-bold text-xl mt-2">
+                  MWK{product.price.toFixed(2)}
+                </p>
+                <p className="text-gray-600 text-sm mt-1">
+                  {product.stock > 0 ? (
+                    `In Stock: ${product.stock}`
+                  ) : (
+                    <span className="text-red-500">Out of Stock</span>
+                  )}
+                </p>
+                <Button
+                  className="mt-4 w-full bg-amber-600 hover:bg-amber-700"
+                  disabled={product.stock === 0} // Disable button if out of stock
+                >
+                  {product.stock > 0 ? "Buy Now" : "Sold Out"}
+                </Button>
+              </div>
+            </Link>
+          ))
+        )}
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default FeaturedProducts
+export default FeaturedProducts;

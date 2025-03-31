@@ -14,9 +14,14 @@ const CLIENT_URL = process.env.CLIENT_URL;
 // app.use(cors());
 
 app.use(cors({
-  origin: CLIENT_URL, // Use specific frontend URL
+  origin: 'http://localhost:5173', // Use specific frontend URL
   credentials: true // Allow cookies to be sent
 }));
+
+// app.use(cors({
+//   origin: CLIENT_URL, // Use specific frontend URL
+//   credentials: true // Allow cookies to be sent
+// }));
 
 app.use(express.json());
 
