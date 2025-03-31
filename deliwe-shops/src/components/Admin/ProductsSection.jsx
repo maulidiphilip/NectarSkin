@@ -1,201 +1,257 @@
+// src/components/admin/ProductsSection.js
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Trash2, Edit } from "lucide-react";
+import { createProduct, deleteProduct, fetchProducts, updateProduct } from "@/store/Product-slice";
 import { Label } from "@radix-ui/react-label";
-import { createProduct, fetchProducts } from "@/store/Product-slice";
 
 const ProductsSection = () => {
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector((state) => state.products);
+
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     stock: "",
     category: "",
-    imageUrl: "",
+    oldPrice: "",
+    image: null,
   });
+  const [editId, setEditId] = useState(null); // Track product being edited
 
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, image: e.target.files[0] });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(
-      createProduct({
-        ...formData,
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock, 10),
-      })
-    );
+    if (editId) {
+      dispatch(updateProduct({ id: editId, productData: formData }))
+        .unwrap()
+        .then(() => {
+          resetForm();
+        });
+    } else {
+      dispatch(createProduct(formData))
+        .unwrap()
+        .then(() => {
+          resetForm();
+        });
+    }
+  };
+
+  const handleEdit = (product) => {
+    setEditId(product._id);
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      stock: product.stock,
+      category: product.category,
+      oldPrice: product.oldPrice || "",
+      image: null, // Reset image; user must re-upload if changing
+    });
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      dispatch(deleteProduct(id));
+    }
+  };
+
+  const resetForm = () => {
+    setEditId(null);
     setFormData({
       name: "",
       description: "",
       price: "",
       stock: "",
       category: "",
-      imageUrl: "",
+      oldPrice: "",
+      image: null,
     });
   };
 
+  if (loading) return <div className="text-center">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+
   return (
-    <div className="bg-white shadow-xl rounded-xl p-6 md:p-8 lg:p-10 max-w-5xl mx-auto transition-all duration-300">
-      {/* Header */}
-      <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 border-b pb-2">
-        Manage Products
-      </h2>
+    <div className="space-y-6">
+      {/* Product Form */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-4">
+          {editId ? "Edit Product" : "Add New Product"}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div>
+            <Label htmlFor="description">Description</Label>
+            <Input
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label htmlFor="price">Price (MWK)</Label>
+              <Input
+                id="price"
+                name="price"
+                type="number"
+                value={formData.price}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="oldPrice">Old Price (MWK, optional)</Label>
+              <Input
+                id="oldPrice"
+                name="oldPrice"
+                type="number"
+                value={formData.oldPrice}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label htmlFor="stock">Stock</Label>
+              <Input
+                id="stock"
+                name="stock"
+                type="number"
+                value={formData.stock}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+            <div className="flex-1">
+              <Label htmlFor="category">Category</Label>
+              <Input
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="image">Product Image</Label>
+            <Input
+              id="image"
+              name="image"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
+            {editId && formData.image === null && (
+              <p className="text-sm text-gray-500 mt-1">
+                Leave blank to keep existing image
+              </p>
+            )}
+          </div>
+          <div className="flex gap-4">
+            <Button
+              type="submit"
+              className="bg-amber-600 hover:bg-amber-700 flex-1"
+              disabled={loading}
+            >
+              {editId ? "Update Product" : "Create Product"}
+            </Button>
+            {editId && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={resetForm}
+                className="flex-1"
+              >
+                Cancel Edit
+              </Button>
+            )}
+          </div>
+        </form>
+      </div>
 
-      {/* Create Product Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg shadow-inner mb-8"
-      >
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-gray-700 font-medium">
-            Product Name
-          </Label>
-          <Input
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="border-gray-300 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-            placeholder="e.g., Luxury Lipstick"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-gray-700 font-medium">
-            Description
-          </Label>
-          <Input
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-            className="border-gray-300 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-            placeholder="e.g., Long-lasting premium lipstick"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="price" className="text-gray-700 font-medium">
-            Price (MWK)
-          </Label>
-          <Input
-            id="price"
-            name="price"
-            type="number"
-            step="0.01"
-            value={formData.price}
-            onChange={handleChange}
-            required
-            className="border-gray-300 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-            placeholder="e.g., 999.99"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="stock" className="text-gray-700 font-medium">
-            Stock
-          </Label>
-          <Input
-            id="stock"
-            name="stock"
-            type="number"
-            value={formData.stock}
-            onChange={handleChange}
-            required
-            className="border-gray-300 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-            placeholder="e.g., 50"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="category" className="text-gray-700 font-medium">
-            Category
-          </Label>
-          <Input
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-            className="border-gray-300 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-            placeholder="e.g., Cosmetics"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="imageUrl" className="text-gray-700 font-medium">
-            Image URL (Optional)
-          </Label>
-          <Input
-            id="imageUrl"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            className="border-gray-300 focus:ring-amber-500 focus:border-amber-500 transition-colors"
-            placeholder="e.g., http://example.com/image.jpg"
-          />
-        </div>
-        <div className="md:col-span-2 flex justify-end">
-          <Button
-            type="submit"
-            className="bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 px-6 rounded-full shadow-md hover:shadow-lg transition-all duration-200"
-            disabled={loading}
-          >
-            {loading ? "Creating..." : "Add Product"}
-          </Button>
-        </div>
-      </form>
-
-      {/* Error Display */}
-      {error && (
-        <p className="text-red-600 bg-red-50 p-3 rounded-md mb-6 font-medium">
-          {error}
-        </p>
-      )}
-
-      {/* Product List (Table) */}
-      <div className="space-y-6">
-        <h3 className="text-xl font-semibold text-gray-900 border-b pb-2">
-          Product List
-        </h3>
+      {/* Products Table */}
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <h2 className="text-2xl font-bold mb-4">Product List</h2>
         {products.length === 0 ? (
-          <p className="text-gray-500 italic">No products yet. Add some above!</p>
+          <p className="text-gray-600">No products yet.</p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse bg-white rounded-lg shadow-md">
+            <table className="w-full text-left">
               <thead>
-                <tr className="bg-amber-100 text-gray-800">
-                  <th className="py-3 px-4 text-left font-semibold">Name</th>
-                  <th className="py-3 px-4 text-left font-semibold">Price</th>
-                  <th className="py-3 px-4 text-left font-semibold">Stock</th>
-                  <th className="py-3 px-4 text-left font-semibold">Category</th>
-                  <th className="py-3 px-4 text-left font-semibold">Actions</th>
+                <tr className="bg-gray-100">
+                  <th className="p-3">Image</th>
+                  <th className="p-3">Name</th>
+                  <th className="p-3">Price</th>
+                  <th className="p-3">Stock</th>
+                  <th className="p-3">Category</th>
+                  <th className="p-3">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <tr
-                    key={product._id}
-                    className="border-b hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <td className="py-3 px-4 text-gray-900">{product.name}</td>
-                    <td className="py-3 px-4 text-gray-700">MWK{product.price.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-gray-700">{product.stock}</td>
-                    <td className="py-3 px-4 text-gray-700">{product.category}</td>
-                    <td className="py-3 px-4">
+                  <tr key={product._id} className="border-b">
+                    <td className="p-3">
+                      <img
+                        src={product.imageUrl || "https://via.placeholder.com/50"}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                    </td>
+                    <td className="p-3">{product.name}</td>
+                    <td className="p-3">
+                      MWK{product.price.toFixed(2)}
+                      {product.oldPrice && (
+                        <span className="line-through text-gray-500 ml-2">
+                          MWK{product.oldPrice.toFixed(2)}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3">{product.stock}</td>
+                    <td className="p-3">{product.category}</td>
+                    <td className="p-3 flex gap-2">
                       <Button
                         variant="outline"
-                        className="text-amber-600 border-amber-600 hover:bg-amber-50 transition-colors"
                         size="sm"
+                        onClick={() => handleEdit(product)}
                       >
-                        Edit
+                        <Edit size={16} />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDelete(product._id)}
+                      >
+                        <Trash2 size={16} />
                       </Button>
                     </td>
                   </tr>
