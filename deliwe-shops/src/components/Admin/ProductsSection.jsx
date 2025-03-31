@@ -1,17 +1,15 @@
-// src/components/admin/ProductsSection.js
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { fetchProducts, createProduct, updateProduct, deleteProduct } from "@/store/Product-slice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Edit } from "lucide-react";
-import { createProduct, deleteProduct, fetchProducts, updateProduct } from "@/store/Product-slice";
 import { Label } from "@radix-ui/react-label";
 
 const ProductsSection = () => {
   const dispatch = useDispatch();
   const { products, loading, error } = useSelector((state) => state.products);
 
-  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -21,7 +19,8 @@ const ProductsSection = () => {
     oldPrice: "",
     image: null,
   });
-  const [editId, setEditId] = useState(null); // Track product being edited
+  const [editId, setEditId] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -33,23 +32,42 @@ const ProductsSection = () => {
   };
 
   const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
+    const file = e.target.files[0];
+    if (file) {
+      console.log("Image selected for upload:", {
+        name: file.name,
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        type: file.type,
+      });
+      setFormData({ ...formData, image: file });
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (formData.image) {
+      console.log("Uploading image to Cloudinary with product:", {
+        name: formData.name,
+        imageName: formData.image.name,
+      });
+    }
     if (editId) {
       dispatch(updateProduct({ id: editId, productData: formData }))
         .unwrap()
-        .then(() => {
+        .then((updatedProduct) => {
+          console.log("Product updated successfully:", updatedProduct); // Log full product
           resetForm();
-        });
+        })
+        .catch((err) => console.error("Update failed:", err));
     } else {
       dispatch(createProduct(formData))
         .unwrap()
-        .then(() => {
+        .then((newProduct) => {
+          console.log("Product created successfully:", newProduct); // Log full product
           resetForm();
-        });
+        })
+        .catch((err) => console.error("Creation failed:", err));
     }
   };
 
@@ -62,13 +80,16 @@ const ProductsSection = () => {
       stock: product.stock,
       category: product.category,
       oldPrice: product.oldPrice || "",
-      image: null, // Reset image; user must re-upload if changing
+      image: null,
     });
+    setImagePreview(product.imageUrl || null);
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      dispatch(deleteProduct(id));
+      dispatch(deleteProduct(id))
+        .unwrap()
+        .then(() => console.log("Product deleted successfully"));
     }
   };
 
@@ -83,6 +104,7 @@ const ProductsSection = () => {
       oldPrice: "",
       image: null,
     });
+    setImagePreview(null);
   };
 
   if (loading) return <div className="text-center">Loading...</div>;
@@ -171,9 +193,18 @@ const ProductsSection = () => {
               accept="image/*"
               onChange={handleFileChange}
             />
-            {editId && formData.image === null && (
+            {imagePreview && (
+              <div className="mt-2">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-lg shadow-md"
+                />
+              </div>
+            )}
+            {editId && formData.image === null && !imagePreview && (
               <p className="text-sm text-gray-500 mt-1">
-                Leave blank to keep existing image
+                No new image selected; current image will be kept.
               </p>
             )}
           </div>

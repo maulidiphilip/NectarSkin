@@ -1,5 +1,4 @@
-// server/Controller/products-controller/product-controller.js
-const Product = require("../../Models/Products"); 
+const Product = require("../../Models/Products");
 const cloudinary = require("../../Config/cloudinary");
 const upload = require("../../Config/multer");
 
@@ -19,23 +18,25 @@ const productController = {
 
       let imageUrl = "";
       if (req.file) {
-        const result = await cloudinary.uploader.upload_stream(
-          { folder: "nectarSkin_products" },
-          (error, result) => {
-            if (error) throw new Error("Image upload failed");
-            imageUrl = result.secure_url;
-          }
-        ).end(req.file.buffer);
+        const result = await new Promise((resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream({ folder: "nectarSkin_products" }, (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            })
+            .end(req.file.buffer);
+        });
+        imageUrl = result.secure_url;
+        console.log("Cloudinary upload successful, URL:", imageUrl); // Debug log
       }
 
-      // Create product
       const newProduct = new Product({
         name,
         description,
         price,
         stock,
         category,
-        imageUrl: imageUrl || req.body.imageUrl, // Use uploaded image or fallback to URL
+        imageUrl,
         oldPrice,
         createdBy: req.user._id,
       });
@@ -57,50 +58,6 @@ const productController = {
     }
   },
 
-  // Get all products (public)
-  getAllProducts: async (req, res) => {
-    try {
-      const products = await Product.find().populate("createdBy", "userName");
-      res.status(200).json({
-        success: true,
-        message: "Products retrieved successfully",
-        data: products,
-      });
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch products",
-        error: error.message,
-      });
-    }
-  },
-
-  // Get product by ID (public)
-  getProductById: async (req, res) => {
-    try {
-      const product = await Product.findById(req.params.id).populate("createdBy", "userName");
-      if (!product) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found",
-        });
-      }
-      res.status(200).json({
-        success: true,
-        message: "Product retrieved successfully",
-        data: product,
-      });
-    } catch (error) {
-      console.error("Error fetching product by ID:", error);
-      res.status(500).json({
-        success: false,
-        message: "Failed to fetch product",
-        error: error.message,
-      });
-    }
-  },
-
   // Update a product with image upload
   updateProduct: async (req, res) => {
     try {
@@ -116,27 +73,28 @@ const productController = {
 
       let imageUrl = product.imageUrl;
       if (req.file) {
-        // Delete old image from Cloudinary if it exists
         if (imageUrl) {
           const publicId = imageUrl.split("/").pop().split(".")[0];
           await cloudinary.uploader.destroy(`nectarSkin_products/${publicId}`);
         }
-        const result = await cloudinary.uploader.upload_stream(
-          { folder: "nectarSkin_products" },
-          (error, result) => {
-            if (error) throw new Error("Image upload failed");
-            imageUrl = result.secure_url;
-          }
-        ).end(req.file.buffer);
+        const result = await new Promise((resolve, reject) => {
+          cloudinary.uploader
+            .upload_stream({ folder: "nectarSkin_products" }, (error, result) => {
+              if (error) return reject(error);
+              resolve(result);
+            })
+            .end(req.file.buffer);
+        });
+        imageUrl = result.secure_url;
+        console.log("Cloudinary update successful, URL:", imageUrl); // Debug log
       }
 
-      // Update fields
       product.name = name || product.name;
       product.description = description || product.description;
       product.price = price || product.price;
       product.stock = stock || product.stock;
       product.category = category || product.category;
-      product.imageUrl = imageUrl || req.body.imageUrl || product.imageUrl;
+      product.imageUrl = imageUrl;
       product.oldPrice = oldPrice !== undefined ? oldPrice : product.oldPrice;
 
       const updatedProduct = await product.save();
@@ -168,7 +126,6 @@ const productController = {
         });
       }
 
-      // Delete image from Cloudinary if it exists
       if (product.imageUrl) {
         const publicId = product.imageUrl.split("/").pop().split(".")[0];
         await cloudinary.uploader.destroy(`nectarSkin_products/${publicId}`);
@@ -189,9 +146,51 @@ const productController = {
       });
     }
   },
+
+  // Existing getAllProducts and getProductById remain unchanged...
+  getAllProducts: async (req, res) => {
+    try {
+      const products = await Product.find().populate("createdBy", "userName");
+      res.status(200).json({
+        success: true,
+        message: "Products retrieved successfully",
+        data: products,
+      });
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch products",
+        error: error.message,
+      });
+    }
+  },
+
+  getProductById: async (req, res) => {
+    try {
+      const product = await Product.findById(req.params.id).populate("createdBy", "userName");
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: "Product not found",
+        });
+      }
+      res.status(200).json({
+        success: true,
+        message: "Product retrieved successfully",
+        data: product,
+      });
+    } catch (error) {
+      console.error("Error fetching product by ID:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch product",
+        error: error.message,
+      });
+    }
+  },
 };
 
-// Middleware for image upload
 const uploadMiddleware = upload.single("image");
 
 module.exports = { productController, uploadMiddleware };
