@@ -3,8 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts, createProduct, updateProduct, deleteProduct } from "@/store/Product-slice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Edit } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
+import { Trash2, Edit, Plus } from "lucide-react";
+// import { Toaster } from "@/components/ui/sonner"; // Import Sonner components
 import { Label } from "@radix-ui/react-label";
+// import { toast } from "sonner";
 
 const ProductsSection = () => {
   const dispatch = useDispatch();
@@ -21,6 +24,9 @@ const ProductsSection = () => {
   });
   const [editId, setEditId] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -56,18 +62,28 @@ const ProductsSection = () => {
       dispatch(updateProduct({ id: editId, productData: formData }))
         .unwrap()
         .then((updatedProduct) => {
-          console.log("Product updated successfully:", updatedProduct); // Log full product
+          console.log("Product updated successfully:", updatedProduct);
+          // toast.success("Product updated successfully!");
           resetForm();
+          setIsSheetOpen(false);
         })
-        .catch((err) => console.error("Update failed:", err));
+        .catch((err) => {
+          console.error("Update failed:", err);
+          // toast.error("Failed to update product.");
+        });
     } else {
       dispatch(createProduct(formData))
         .unwrap()
         .then((newProduct) => {
-          console.log("Product created successfully:", newProduct); // Log full product
+          console.log("Product created successfully:", newProduct);
+          // toast.success("Product created successfully!");
           resetForm();
+          setIsSheetOpen(false);
         })
-        .catch((err) => console.error("Creation failed:", err));
+        .catch((err) => {
+          console.error("Creation failed:", err);
+          // toast.error("Failed to create product.");
+        });
     }
   };
 
@@ -83,13 +99,21 @@ const ProductsSection = () => {
       image: null,
     });
     setImagePreview(product.imageUrl || null);
+    setIsSheetOpen(true);
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       dispatch(deleteProduct(id))
         .unwrap()
-        .then(() => console.log("Product deleted successfully"));
+        .then(() => {
+          console.log("Product deleted successfully");
+          // toast.success("Product deleted successfully!");
+        })
+        .catch((err) => {
+          console.error("Delete failed:", err);
+          // toast.error("Failed to delete product.");
+        });
     }
   };
 
@@ -107,169 +131,82 @@ const ProductsSection = () => {
     setImagePreview(null);
   };
 
-  if (loading) return <div className="text-center">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  const openSheetForNewProduct = () => {
+    resetForm();
+    setIsSheetOpen(true);
+  };
+
+  // Pagination Logic
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const paginatedProducts = products.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  if (loading) return <div className="text-center py-10">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center py-10">Error: {error}</div>;
 
   return (
-    <div className="space-y-6">
-      {/* Product Form */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">
-          {editId ? "Edit Product" : "Add New Product"}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="price">Price (MWK)</Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="oldPrice">Old Price (MWK, optional)</Label>
-              <Input
-                id="oldPrice"
-                name="oldPrice"
-                type="number"
-                value={formData.oldPrice}
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="stock">Stock</Label>
-              <Input
-                id="stock"
-                name="stock"
-                type="number"
-                value={formData.stock}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="image">Product Image</Label>
-            <Input
-              id="image"
-              name="image"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            {imagePreview && (
-              <div className="mt-2">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg shadow-md"
-                />
-              </div>
-            )}
-            {editId && formData.image === null && !imagePreview && (
-              <p className="text-sm text-gray-500 mt-1">
-                No new image selected; current image will be kept.
-              </p>
-            )}
-          </div>
-          <div className="flex gap-4">
-            <Button
-              type="submit"
-              className="bg-amber-600 hover:bg-amber-700 flex-1"
-              disabled={loading}
-            >
-              {editId ? "Update Product" : "Create Product"}
-            </Button>
-            {editId && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetForm}
-                className="flex-1"
-              >
-                Cancel Edit
-              </Button>
-            )}
-          </div>
-        </form>
+    <div className="space-y-6 p-6">
+      {/* Header with Add Button */}
+      <div className="flex justify-between items-center">
+        {/* <h2 className="text-2xl font-bold text-gray-900">Products</h2> */}
+        <Button
+          onClick={openSheetForNewProduct}
+          className="bg-amber-600 hover:bg-amber-700"
+        >
+          <Plus size={16} className="mr-2" /> Add Product
+        </Button>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">Product List</h2>
-        {products.length === 0 ? (
-          <p className="text-gray-600">No products yet.</p>
-        ) : (
+      {/* Styled Table */}
+      {products.length === 0 ? (
+        <p className="text-gray-600 text-center py-10">No products yet. Add one to get started!</p>
+      ) : (
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="p-3">Image</th>
-                  <th className="p-3">Name</th>
-                  <th className="p-3">Price</th>
-                  <th className="p-3">Stock</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Actions</th>
+              <thead className="bg-amber-100 text-gray-700">
+                <tr>
+                  <th className="p-4 font-semibold">Image</th>
+                  <th className="p-4 font-semibold">Name</th>
+                  <th className="p-4 font-semibold">Price</th>
+                  <th className="p-4 font-semibold">Stock</th>
+                  <th className="p-4 font-semibold">Category</th>
+                  <th className="p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <tr key={product._id} className="border-b">
-                    <td className="p-3">
+                {paginatedProducts.map((product) => (
+                  <tr
+                    key={product._id}
+                    className="border-b hover:bg-gray-50 transition"
+                  >
+                    <td className="p-4">
                       <img
                         src={product.imageUrl || "https://via.placeholder.com/50"}
                         alt={product.name}
-                        className="w-12 h-12 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded-md"
                       />
                     </td>
-                    <td className="p-3">{product.name}</td>
-                    <td className="p-3">
+                    <td className="p-4 text-gray-900">{product.name}</td>
+                    <td className="p-4 text-amber-600">
                       MWK{product.price.toFixed(2)}
                       {product.oldPrice && (
-                        <span className="line-through text-gray-500 ml-2">
+                        <span className="text-gray-500 line-through ml-2">
                           MWK{product.oldPrice.toFixed(2)}
                         </span>
                       )}
                     </td>
-                    <td className="p-3">{product.stock}</td>
-                    <td className="p-3">{product.category}</td>
-                    <td className="p-3 flex gap-2">
+                    <td className="p-4">
+                      {product.stock > 0 ? (
+                        product.stock
+                      ) : (
+                        <span className="text-red-500">Out of Stock</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-gray-600">{product.category}</td>
+                    <td className="p-4 flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
@@ -290,8 +227,163 @@ const ProductsSection = () => {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center p-4">
+              <Button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                variant="outline"
+              >
+                Previous
+              </Button>
+              <span className="text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                variant="outline"
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Enhanced Sheet */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="right" className="w-full sm:w-[400px] md:w-[500px] lg:w-[600px] max-w-full p-6 overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-xl font-bold">
+              {editId ? "Edit Product" : "Add New Product"}
+            </SheetTitle>
+          </SheetHeader>
+          <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  required
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
+                  required
+                  className="mt-1"
+                />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="price" className="text-sm font-medium">Price (MWK)</Label>
+                  <Input
+                    id="price"
+                    name="price"
+                    type="number"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="oldPrice" className="text-sm font-medium">Old Price (optional)</Label>
+                  <Input
+                    id="oldPrice"
+                    name="oldPrice"
+                    type="number"
+                    value={formData.oldPrice}
+                    onChange={handleInputChange}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="stock" className="text-sm font-medium">Stock</Label>
+                  <Input
+                    id="stock"
+                    name="stock"
+                    type="number"
+                    value={formData.stock}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                  <Input
+                    id="category"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleInputChange}
+                    required
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="image" className="text-sm font-medium">Product Image</Label>
+                <Input
+                  id="image"
+                  name="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="mt-1"
+                />
+                {imagePreview && (
+                  <div className="mt-2">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-24 h-24 object-cover rounded-md"
+                    />
+                  </div>
+                )}
+                {editId && formData.image === null && !imagePreview && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    No new image selected; current image will be kept.
+                  </p>
+                )}
+              </div>
+            </div>
+            <SheetFooter className="flex flex-col sm:flex-row gap-4">
+              <Button
+                type="submit"
+                className="bg-amber-600 hover:bg-amber-700 w-full sm:w-auto"
+                disabled={loading}
+              >
+                {editId ? "Update" : "Create"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsSheetOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      {/* Sonner Toaster */}
+      {/* <Toaster /> */}
     </div>
   );
 };
