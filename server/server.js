@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const authRoutes = require("./Routes/Auth-Routes");
+const productRoutes = require("./Routes/Products/product-routes")
 
 const app = express();
 const PORT = process.env.PORT;
@@ -28,6 +29,9 @@ mongoose
 
 // auth route configuration for the application
 app.use("/api/auth", authRoutes);
+
+// products routes 
+app.use("/api/products", productRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is now running on port ${PORT}`);
