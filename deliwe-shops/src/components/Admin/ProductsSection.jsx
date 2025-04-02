@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Trash2, Edit, Plus } from "lucide-react";
-// import { Toaster } from "@/components/ui/sonner"; // Import Sonner components
 import { Label } from "@radix-ui/react-label";
-// import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 const ProductsSection = () => {
   const dispatch = useDispatch();
@@ -63,26 +62,26 @@ const ProductsSection = () => {
         .unwrap()
         .then((updatedProduct) => {
           console.log("Product updated successfully:", updatedProduct);
-          // toast.success("Product updated successfully!");
+          toast.success("Product updated successfully!");
           resetForm();
           setIsSheetOpen(false);
         })
         .catch((err) => {
           console.error("Update failed:", err);
-          // toast.error("Failed to update product.");
+          toast.error("Failed to update product.");
         });
     } else {
       dispatch(createProduct(formData))
         .unwrap()
         .then((newProduct) => {
           console.log("Product created successfully:", newProduct);
-          // toast.success("Product created successfully!");
+          toast.success("Product created successfully!");
           resetForm();
           setIsSheetOpen(false);
         })
         .catch((err) => {
           console.error("Creation failed:", err);
-          // toast.error("Failed to create product.");
+          toast.error("Failed to create product.");
         });
     }
   };
@@ -108,11 +107,11 @@ const ProductsSection = () => {
         .unwrap()
         .then(() => {
           console.log("Product deleted successfully");
-          // toast.success("Product deleted successfully!");
+          toast.success("Product deleted successfully!");
         })
         .catch((err) => {
           console.error("Delete failed:", err);
-          // toast.error("Failed to delete product.");
+          toast.error("Failed to delete product.");
         });
     }
   };

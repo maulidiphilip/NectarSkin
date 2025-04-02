@@ -1,9 +1,11 @@
+// src/components/AuthPage.js
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Lock, UserPlus, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { login, register } from "@/store/Auth-slice";
+import { syncCart } from "@/store/Cart-Slice";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,45 +13,45 @@ const AuthPage = () => {
     userName: "",
     userEmail: "",
     password: "",
-    // Remove role from initial state since it’s no longer user-controlled
   });
 
   const dispatch = useDispatch();
   const { loading, error, role, token } = useSelector((state) => state.auth);
+  const cartItems = useSelector((state) => state.cart.items);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Redirect when role and token are set
+  const redirectPath = location.state?.from || "/";
+
   useEffect(() => {
     if (token && role) {
-      console.log("Role detected in useEffect:", role);
       if (role === "admin") {
         navigate("/admin/dashboard");
       } else {
-        navigate("/user/dashboard");
+        if (cartItems.length > 0) {
+          dispatch(syncCart(cartItems))
+            .unwrap()
+            .then(() => navigate(redirectPath))
+            .catch((err) => console.error("Cart sync failed:", err));
+        } else {
+          navigate(redirectPath);
+        }
       }
     }
-  }, [role, token, navigate]);
+  }, [token, role, cartItems, navigate, redirectPath, dispatch]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isLogin) {
       const loginData = { userEmail: formData.userEmail, password: formData.password };
-      console.log("Login data:", loginData);
-      dispatch(login(loginData)).then((result) => {
-        console.log("Login result:", result);
-        if (result.meta.requestStatus === "rejected") {
-          console.log("Login failed:", result.payload);
-        }
-      });
+      dispatch(login(loginData));
     } else {
-      const registerData = { userName: formData.userName, userEmail: formData.userEmail, password: formData.password };
-      console.log("Register data:", registerData);
-      dispatch(register(registerData)).then((result) => {
-        console.log("Register result:", result);
-        if (result.meta.requestStatus === "rejected") {
-          console.log("Registration failed:", result.payload);
-        }
-      });
+      const registerData = {
+        userName: formData.userName,
+        userEmail: formData.userEmail,
+        password: formData.password,
+      };
+      dispatch(register(registerData));
     }
   };
 
@@ -57,10 +59,10 @@ const AuthPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 pt-28">
       <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold text-gray-900 text-center">
-          {isLogin ? "Login to Your Account" : "Create an Account"}
+          {isLogin ? "Login to Checkout" : "Create Account to Checkout"}
         </h2>
         <p className="text-gray-500 text-center mt-2">
-          {isLogin ? "Welcome back! Please enter your credentials." : "Join us and start shopping now!"}
+          {isLogin ? "Sign in to complete your purchase" : "Register to proceed with checkout"}
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -106,7 +108,7 @@ const AuthPage = () => {
             disabled={loading}
           >
             {isLogin ? <LogIn size={18} /> : <UserPlus size={18} />}
-            {isLogin ? "Login" : "Register"}
+            {isLogin ? "Login & Checkout" : "Register & Checkout"}
           </Button>
         </form>
 
