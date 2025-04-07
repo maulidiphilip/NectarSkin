@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet";
 import { Trash2, Edit, Plus } from "lucide-react";
-// import { Toaster } from "@/components/ui/sonner"; // Import Sonner components
 import { Label } from "@radix-ui/react-label";
-// import { toast } from "sonner";
 
 const ProductsSection = () => {
   const dispatch = useDispatch();
@@ -40,11 +38,6 @@ const ProductsSection = () => {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      console.log("Image selected for upload:", {
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(2)} KB`,
-        type: file.type,
-      });
       setFormData({ ...formData, image: file });
       setImagePreview(URL.createObjectURL(file));
     }
@@ -52,37 +45,19 @@ const ProductsSection = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (formData.image) {
-      console.log("Uploading image to Cloudinary with product:", {
-        name: formData.name,
-        imageName: formData.image.name,
-      });
-    }
     if (editId) {
       dispatch(updateProduct({ id: editId, productData: formData }))
         .unwrap()
-        .then((updatedProduct) => {
-          console.log("Product updated successfully:", updatedProduct);
-          // toast.success("Product updated successfully!");
+        .then(() => {
           resetForm();
           setIsSheetOpen(false);
-        })
-        .catch((err) => {
-          console.error("Update failed:", err);
-          // toast.error("Failed to update product.");
         });
     } else {
       dispatch(createProduct(formData))
         .unwrap()
-        .then((newProduct) => {
-          console.log("Product created successfully:", newProduct);
-          // toast.success("Product created successfully!");
+        .then(() => {
           resetForm();
           setIsSheetOpen(false);
-        })
-        .catch((err) => {
-          console.error("Creation failed:", err);
-          // toast.error("Failed to create product.");
         });
     }
   };
@@ -104,16 +79,7 @@ const ProductsSection = () => {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      dispatch(deleteProduct(id))
-        .unwrap()
-        .then(() => {
-          console.log("Product deleted successfully");
-          // toast.success("Product deleted successfully!");
-        })
-        .catch((err) => {
-          console.error("Delete failed:", err);
-          // toast.error("Failed to delete product.");
-        });
+      dispatch(deleteProduct(id)).unwrap();
     }
   };
 
@@ -136,7 +102,6 @@ const ProductsSection = () => {
     setIsSheetOpen(true);
   };
 
-  // Pagination Logic
   const totalPages = Math.ceil(products.length / itemsPerPage);
   const paginatedProducts = products.slice(
     (currentPage - 1) * itemsPerPage,
@@ -147,50 +112,47 @@ const ProductsSection = () => {
   if (error) return <div className="text-red-500 text-center py-10">Error: {error}</div>;
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header with Add Button */}
-      <div className="flex justify-between items-center">
-        {/* <h2 className="text-2xl font-bold text-gray-900">Products</h2> */}
+    <div className="space-y-6 p-4 sm:p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <Button
           onClick={openSheetForNewProduct}
-          className="bg-amber-600 hover:bg-amber-700"
+          className="bg-amber-600 hover:bg-amber-700 w-full sm:w-auto"
         >
           <Plus size={16} className="mr-2" /> Add Product
         </Button>
       </div>
 
-      {/* Styled Table */}
+      {/* Products Display */}
       {products.length === 0 ? (
         <p className="text-gray-600 text-center py-10">No products yet. Add one to get started!</p>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white rounded-lg shadow-md">
+          {/* Table for Larger Screens */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-amber-100 text-gray-700">
                 <tr>
-                  <th className="p-4 font-semibold">Image</th>
-                  <th className="p-4 font-semibold">Name</th>
-                  <th className="p-4 font-semibold">Price</th>
-                  <th className="p-4 font-semibold">Stock</th>
-                  <th className="p-4 font-semibold">Category</th>
-                  <th className="p-4 font-semibold">Actions</th>
+                  <th className="p-3 sm:p-4 font-semibold">Image</th>
+                  <th className="p-3 sm:p-4 font-semibold">Name</th>
+                  <th className="p-3 sm:p-4 font-semibold">Price</th>
+                  <th className="p-3 sm:p-4 font-semibold">Stock</th>
+                  <th className="p-3 sm:p-4 font-semibold">Category</th>
+                  <th className="p-3 sm:p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedProducts.map((product) => (
-                  <tr
-                    key={product._id}
-                    className="border-b hover:bg-gray-50 transition"
-                  >
-                    <td className="p-4">
+                  <tr key={product._id} className="border-b hover:bg-gray-50">
+                    <td className="p-3 sm:p-4">
                       <img
                         src={product.imageUrl || "https://via.placeholder.com/50"}
                         alt={product.name}
-                        className="w-12 h-12 object-cover rounded-md"
+                        className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-md"
                       />
                     </td>
-                    <td className="p-4 text-gray-900">{product.name}</td>
-                    <td className="p-4 text-amber-600">
+                    <td className="p-3 sm:p-4 text-gray-900">{product.name}</td>
+                    <td className="p-3 sm:p-4 text-amber-600">
                       MWK{product.price.toFixed(2)}
                       {product.oldPrice && (
                         <span className="text-gray-500 line-through ml-2">
@@ -198,27 +160,15 @@ const ProductsSection = () => {
                         </span>
                       )}
                     </td>
-                    <td className="p-4">
-                      {product.stock > 0 ? (
-                        product.stock
-                      ) : (
-                        <span className="text-red-500">Out of Stock</span>
-                      )}
+                    <td className="p-3 sm:p-4">
+                      {product.stock > 0 ? product.stock : <span className="text-red-500">Out of Stock</span>}
                     </td>
-                    <td className="p-4 text-gray-600">{product.category}</td>
-                    <td className="p-4 flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(product)}
-                      >
+                    <td className="p-3 sm:p-4 text-gray-600">{product.category}</td>
+                    <td className="p-3 sm:p-4 flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
                         <Edit size={16} />
                       </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(product._id)}
-                      >
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(product._id)}>
                         <Trash2 size={16} />
                       </Button>
                     </td>
@@ -228,13 +178,50 @@ const ProductsSection = () => {
             </table>
           </div>
 
+          {/* Card Layout for Mobile */}
+          <div className="block sm:hidden space-y-4 p-4">
+            {paginatedProducts.map((product) => (
+              <div key={product._id} className="border rounded-lg p-4 bg-gray-50">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={product.imageUrl || "https://via.placeholder.com/50"}
+                    alt={product.name}
+                    className="w-16 h-16 object-cover rounded-md"
+                  />
+                  <div className="flex-1">
+                    <h3 className="text-gray-900 font-semibold">{product.name}</h3>
+                    <p className="text-amber-600">
+                      MWK{product.price.toFixed(2)}
+                      {product.oldPrice && (
+                        <span className="text-gray-500 line-through ml-2">
+                          MWK{product.oldPrice.toFixed(2)}
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-gray-600">Stock: {product.stock > 0 ? product.stock : "Out of Stock"}</p>
+                    <p className="text-gray-600">Category: {product.category}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(product)}>
+                    <Edit size={16} />
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={() => handleDelete(product._id)}>
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-between items-center p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center p-4 gap-4">
               <Button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
                 variant="outline"
+                className="w-full sm:w-auto"
               >
                 Previous
               </Button>
@@ -245,6 +232,7 @@ const ProductsSection = () => {
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
                 variant="outline"
+                className="w-full sm:w-auto"
               >
                 Next
               </Button>
@@ -253,11 +241,11 @@ const ProductsSection = () => {
         </div>
       )}
 
-      {/* Enhanced Sheet */}
+      {/* Responsive Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent side="right" className="w-full sm:w-[400px] md:w-[500px] lg:w-[600px] max-w-full p-6 overflow-y-auto">
+        <SheetContent side="right" className="w-[90vw] sm:w-[400px] max-w-full p-4 sm:p-6 overflow-y-auto">
           <SheetHeader>
-            <SheetTitle className="text-xl font-bold">
+            <SheetTitle className="text-lg sm:text-xl font-bold">
               {editId ? "Edit Product" : "Add New Product"}
             </SheetTitle>
           </SheetHeader>
@@ -350,14 +338,9 @@ const ProductsSection = () => {
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-24 h-24 object-cover rounded-md"
+                      className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-md"
                     />
                   </div>
-                )}
-                {editId && formData.image === null && !imagePreview && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    No new image selected; current image will be kept.
-                  </p>
                 )}
               </div>
             </div>
@@ -381,9 +364,6 @@ const ProductsSection = () => {
           </form>
         </SheetContent>
       </Sheet>
-
-      {/* Sonner Toaster */}
-      {/* <Toaster /> */}
     </div>
   );
 };
