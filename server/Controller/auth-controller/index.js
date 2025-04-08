@@ -1,11 +1,9 @@
-// Controller/auth-controller.js
 const User = require("../../Models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const registerUser = async (req, res) => {
   try {
-    // console.log("Request body:", req.body);
     const { userName, userEmail, password } = req.body;
 
     if (!userName || !userEmail || !password) {
@@ -62,12 +60,17 @@ const registerUser = async (req, res) => {
   }
 };
 
-// loginUser remains unchanged
 const loginUser = async (req, res) => {
   const { userEmail, password } = req.body;
 
-  const checkUser = await User.findOne({ userEmail });
+  if (!userEmail || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and password are required",
+    });
+  }
 
+  const checkUser = await User.findOne({ userEmail });
   if (!checkUser || !(await bcrypt.compare(password, checkUser.password))) {
     return res.status(401).json({
       success: false,
@@ -88,7 +91,7 @@ const loginUser = async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "mwakwanisa kulowa mu system yathu",
+    message: "Logged in successfully",
     data: {
       accessToken,
       user: {

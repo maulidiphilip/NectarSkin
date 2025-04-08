@@ -1,3 +1,4 @@
+// src/pages/AdminDashboard.jsx
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import ProductsSection from "@/components/Admin/ProductsSection";
 import OrdersSection from "@/components/Admin/OrdersSection";
-import UsersSection from "@/components/Admin/UsersSection";
+import UsersSection from "@/components/Admin/UsersSection"; // Import the separate component
 import AnalyticsSection from "@/components/Admin/AnalyticsSection";
 
 const AdminDashboard = () => {
@@ -106,7 +107,7 @@ const AdminDashboard = () => {
         </h1>
 
         {/* Dynamic Content */}
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="space-y-6 max-w-7xl mx-auto">
           {activeSection === "products" && <ProductsSection />}
           {activeSection === "orders" && <OrdersSection />}
           {activeSection === "users" && <UsersSection />}
