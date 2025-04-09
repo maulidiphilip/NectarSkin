@@ -15,15 +15,15 @@ const PORT = process.env.PORT;
 const MONGO_URI = process.env.MONGO_URI;
 const CLIENT_URL = process.env.CLIENT_URL;
 
-app.use(cors({
-  origin: 'http://localhost:5173', // Use specific frontend URL
-  credentials: true // Allow cookies to be sent
-}));
-
 // app.use(cors({
-//   origin: CLIENT_URL, // Use specific frontend URL
+//   origin: 'http://localhost:5173', // Use specific frontend URL
 //   credentials: true // Allow cookies to be sent
 // }));
+
+app.use(cors({
+  origin: CLIENT_URL, // Use specific frontend URL
+  credentials: true // Allow cookies to be sent
+}));
 
 app.use(express.json()); // For JSON bodies
 app.use(express.urlencoded({ extended: true })); // For form-data (needed for multer)
