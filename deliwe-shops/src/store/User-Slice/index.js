@@ -2,8 +2,8 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // Base URL for your API 
-const API_URL = "http://localhost:6060";
-// const API_URL = "https://shop-backend-lwk9.onrender.com";
+// const API_URL = "http://localhost:6060";
+const API_URL = "https://shop-backend-lwk9.onrender.com";
 
 // Async thunks for user actions
 export const getProfile = createAsyncThunk(

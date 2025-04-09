@@ -50,23 +50,26 @@ const updateCartItem = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const cart = await Cart.findOne({ userId });
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
 
-    const itemIndex = cart.items.findIndex((item) => item.productId.toString() === productId);
+    const itemIndex = cart.items.findIndex((item) => item.productId._id.toString() === productId);
     if (itemIndex === -1) return res.status(404).json({ success: false, message: "Item not in cart" });
 
-    const product = await Product.findById(productId);
+    const product = cart.items[itemIndex].productId; // Already populated
     if (product.stock < quantity) {
       return res.status(400).json({ success: false, message: "Insufficient stock" });
     }
 
     cart.items[itemIndex].quantity = quantity;
-    cart.totalPrice = cart.items.reduce((total, item) => total + item.quantity * product.price, 0);
+    cart.totalPrice = cart.items.reduce((total, item) => {
+      return total + item.quantity * item.productId.price;
+    }, 0);
 
     await cart.save();
     res.status(200).json({ success: true, data: cart });
   } catch (error) {
+    console.error("Error in updateCartItem:", error);
     res.status(500).json({ success: false, message: "Server error", error: error.message });
   }
 };

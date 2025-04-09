@@ -13,6 +13,8 @@ import AuthPage from "./Pages/AuthPage";
 import AdminDashboard from "./Pages/admin-view/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import UserDashboard from "./Pages/Customer-view/UserDashboard";
+import OrderConfirmation from "./Pages/OrderConfirmation";
+import OrderDetail from "./components/user-dashboard/OrderDetail";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -36,6 +38,8 @@ export default function App() {
         </Route>
         <Route element={<ProtectedRoute allowedRole="user" />}>
           <Route path="/user/dashboard" element={<UserDashboard />} />
+          <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/order/:orderId" element={<OrderDetail />} />
         </Route>
       </Routes>
       <Footer />

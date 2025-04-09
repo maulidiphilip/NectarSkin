@@ -10,7 +10,12 @@ const orderSchema = new mongoose.Schema({
     },
   ],
   totalPrice: { type: Number, required: true },
-  status: { type: String, default: "Pending", enum: ["Pending", "Shipped", "Delivered"] },
+  paymentMethod: { type: String, enum: ["Mo626", "Mpamba", "Airtel Money", "PayChangu"], required: true },
+  status: {
+    type: String,
+    enum: ["Pending Payment", "Payment Confirmed", "Shipped", "Delivered"],
+    default: "Pending Payment",
+  },
   createdAt: { type: Date, default: Date.now },
 });
 

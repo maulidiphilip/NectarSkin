@@ -10,6 +10,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, role } = useSelector((state) => state.auth);
+  const { items } = useSelector((state) => state.cart); // Get cart items
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -29,6 +30,7 @@ export default function Navbar() {
 
   const isAdmin = role === "admin";
   const isLoggedIn = !!user;
+  const cartItemCount = items.length; // Number of unique items in cart
 
   return (
     <nav
@@ -41,7 +43,6 @@ export default function Navbar() {
           Luxury Beauty
         </Link>
 
-        {/* Desktop Search (Non-Admin Only) */}
         {!isAdmin && (
           <div className="hidden md:flex items-center gap-2">
             <Input placeholder="Search products..." className="w-64" />
@@ -49,7 +50,6 @@ export default function Navbar() {
           </div>
         )}
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-4">
           {isAdmin ? (
             <>
@@ -71,9 +71,11 @@ export default function Navbar() {
               </Link>
               <Link to="/cart" className="relative">
                 <ShoppingCart size={24} />
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-2">
-                  2
-                </span>
+                {cartItemCount > 0 && (
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-2">
+                    {cartItemCount}
+                  </span>
+                )}
               </Link>
               <Link to={isLoggedIn ? "/user/dashboard" : "/auth"}>
                 <User size={24} />
@@ -91,13 +93,11 @@ export default function Navbar() {
           )}
         </div>
 
-        {/* Mobile Menu Toggle */}
         <button className="md:hidden p-2" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {menuOpen && (
         <div className="absolute top-16 left-0 w-full bg-white shadow-lg p-4 flex flex-col space-y-4 md:hidden">
           <Link to="/" className="text-lg font-medium" onClick={() => setMenuOpen(false)}>
@@ -134,7 +134,7 @@ export default function Navbar() {
                 className="flex items-center gap-2"
                 onClick={() => setMenuOpen(false)}
               >
-                <ShoppingCart size={20} /> Cart
+                <ShoppingCart size={20} /> Cart {cartItemCount > 0 && `(${cartItemCount})`}
               </Link>
               <Link
                 to={isLoggedIn ? "/user/dashboard" : "/auth"}
@@ -153,9 +153,7 @@ export default function Navbar() {
                 </Button>
               )}
               <Input placeholder="Search..." className="w-full" />
-              <Button variant="outline" className="w-full">
-                Search
-              </Button>
+              <Button variant="outline" className="w-full">Search</Button>
             </>
           )}
         </div>
