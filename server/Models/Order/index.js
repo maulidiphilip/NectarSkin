@@ -10,7 +10,7 @@ const orderSchema = new mongoose.Schema({
     },
   ],
   totalPrice: { type: Number, required: true },
-  paymentMethod: { type: String, enum: ["Mo626", "Mpamba", "Airtel Money", "PayChangu", "Stripe"], required: true },
+  paymentMethod: { type: String, enum: ["Mo626", "Mpamba", "Airtel Money", "Stripe"], required: true },
   status: {
     type: String,
     enum: ["Pending Payment", "Payment Confirmed", "Shipped", "Delivered"],
