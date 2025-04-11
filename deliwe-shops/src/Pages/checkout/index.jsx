@@ -191,7 +191,7 @@ const CheckoutPage = () => {
                   <option value="Mo626">Mo626</option>
                   <option value="Mpamba">Mpamba</option>
                   <option value="Airtel Money">Airtel Money</option>
-                  <option value="Stripe">Stripe</option>
+                  <option value="Stripe">Instant Pay</option>
                 </select>
                 {paymentMethod && paymentMethod !== "Stripe" && (
                   <p className="text-gray-600 text-sm">{paymentInstructions[paymentMethod]}</p>

@@ -88,6 +88,45 @@ export const fetchOrders = createAsyncThunk(
   }
 );
 
+
+// Fetch Wishlist
+export const fetchWishlist = createAsyncThunk(
+  "cart/fetchWishlist",
+  async (_, { getState }) => {
+    const { auth } = getState();
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/wishlist`, {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    });
+    return response.data.data;
+  }
+);
+
+// Add to Wishlist
+export const addToWishlist = createAsyncThunk(
+  "cart/addToWishlist",
+  async (productId, { getState }) => {
+    const { auth } = getState();
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/api/wishlist/add`,
+      { productId },
+      { headers: { Authorization: `Bearer ${auth.token}` } }
+    );
+    return response.data.data;
+  }
+);
+
+// Remove from Wishlist
+export const removeFromWishlist = createAsyncThunk(
+  "cart/removeFromWishlist",
+  async (productId, { getState }) => {
+    const { auth } = getState();
+    await axios.delete(`${import.meta.env.VITE_API_URL}/api/wishlist/remove/${productId}`, {
+      headers: { Authorization: `Bearer ${auth.token}` },
+    });
+    return productId;
+  }
+);
+
 export const fetchAllOrders = createAsyncThunk(
   "cart/fetchAllOrders",
   async (_, { getState }) => {
@@ -124,8 +163,12 @@ const cartSlice = createSlice({
     totalPrice: 0,
     lastOrder: null,
     orders: [],
+    wishlist: [],
     loading: false,
-    error: null,
+    cartLoading: false,
+    cartError: null,
+    wishlistLoading: false,
+    wishlistError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
@@ -216,6 +259,30 @@ const cartSlice = createSlice({
       .addCase(updateOrderStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      }).addCase(fetchWishlist.pending, (state) => {
+        state.wishlistLoading = true;
+      })
+      .addCase(fetchWishlist.fulfilled, (state, action) => {
+        state.wishlistLoading = false;
+        state.wishlist = action.payload;
+      })
+      .addCase(fetchWishlist.rejected, (state, action) => {
+        state.wishlistLoading = false;
+        state.wishlistError = action.error.message;
+      })
+      .addCase(addToWishlist.pending, (state) => {
+        state.wishlistLoading = true;
+      })
+      .addCase(addToWishlist.fulfilled, (state, action) => {
+        state.wishlistLoading = false;
+        state.wishlist = action.payload;
+      })
+      .addCase(addToWishlist.rejected, (state, action) => {
+        state.wishlistLoading = false;
+        state.wishlistError = action.error.message;
+      })
+      .addCase(removeFromWishlist.fulfilled, (state, action) => {
+        state.wishlist = state.wishlist.filter((item) => item.productId._id !== action.payload);
       });
   },
 });
