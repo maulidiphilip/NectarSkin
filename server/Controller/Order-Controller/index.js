@@ -1,11 +1,11 @@
 const Cart = require("../../Models/Cart");
 const Order = require("../../Models/Order");
 const Products = require("../../Models/Products");
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const createOrder = async (req, res) => {
   const userId = req.user._id;
-  const { paymentMethod } = req.body;
+  const { paymentMethod, shippingAddress, paymentIntentId } = req.body;
 
   try {
     const cart = await Cart.findOne({ userId }).populate("items.productId");
@@ -13,7 +13,6 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Cart is empty" });
     }
 
-    // Check stock availability for all items
     for (const item of cart.items) {
       if (item.productId.stock < item.quantity) {
         return res.status(400).json({
@@ -23,7 +22,7 @@ const createOrder = async (req, res) => {
       }
     }
 
-    const order = new Order({
+    const orderData = {
       userId,
       items: cart.items.map((item) => ({
         productId: item.productId._id,
@@ -32,10 +31,29 @@ const createOrder = async (req, res) => {
       })),
       totalPrice: cart.totalPrice,
       paymentMethod,
-    });
+      shippingAddress,
+    };
 
-    // Reduce stock and clear cart only for instant payment (PayChangu)
-    if (paymentMethod === "PayChangu") {
+    if (paymentMethod === "Stripe" && !paymentIntentId) {
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(cart.totalPrice * 100),
+        currency: "mwk",
+        metadata: { userId: userId.toString() },
+      });
+      return res.status(200).json({
+        success: true,
+        data: { order: orderData, clientSecret: paymentIntent.client_secret },
+      });
+    }
+
+    const order = new Order(orderData);
+
+    if (paymentMethod === "Stripe" && paymentIntentId) {
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      if (paymentIntent.status !== "succeeded") {
+        return res.status(400).json({ success: false, message: "Payment failed" });
+      }
+      order.status = "Payment Confirmed";
       await Promise.all(
         cart.items.map(async (item) => {
           const product = await Products.findById(item.productId._id);
@@ -44,7 +62,6 @@ const createOrder = async (req, res) => {
         })
       );
       await Cart.deleteOne({ userId });
-      order.status = "Payment Confirmed";
     }
 
     await order.save();

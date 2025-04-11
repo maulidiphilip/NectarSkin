@@ -61,15 +61,15 @@ export const removeFromCart = createAsyncThunk(
 
 export const createOrder = createAsyncThunk(
   "cart/createOrder",
-  async (paymentMethod, { getState }) => {
+  async ({ paymentMethod, shippingAddress, paymentIntentId }, { getState }) => {
     const { auth } = getState();
+    console.log("Sending createOrder request:", { paymentMethod, shippingAddress, paymentIntentId });
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/api/orders`,
-      { paymentMethod },
-      {
-        headers: { Authorization: `Bearer ${auth.token}` },
-      }
+      { paymentMethod, shippingAddress, paymentIntentId },
+      { headers: { Authorization: `Bearer ${auth.token}` } }
     );
+    console.log("createOrder response:", response.data);
     return response.data.data;
   }
 );
@@ -170,9 +170,7 @@ const cartSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
-      .addCase(createOrder.pending, (state) => {
-        state.loading = true;
-      })
+      .addCase(createOrder.pending, (state) => { state.loading = true; })
       .addCase(createOrder.fulfilled, (state, action) => {
         state.loading = false;
         state.items = [];
