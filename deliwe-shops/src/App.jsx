@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import UserDashboard from "./Pages/Customer-view/UserDashboard";
 import OrderConfirmation from "./Pages/OrderConfirmation";
 import OrderDetail from "./components/user-dashboard/OrderDetail";
+import ScrollToTop from "./components/ScrollToTop";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ export default function App() {
 
   return (
     <>
+      <ScrollToTop />
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -32,6 +34,7 @@ export default function App() {
         <Route path="/shop" element={<Shop />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="*" element={<div className="text-center pt-24">404 - Page Not Found</div>} />
         <Route path="/auth" element={<AuthPage />} />
         <Route element={<ProtectedRoute allowedRole="admin" />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
