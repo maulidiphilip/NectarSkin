@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ShoppingCart, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchPublicProducts } from "@/store/Product-slice";
@@ -9,9 +9,10 @@ import { addToCart, fetchCart } from "@/store/Cart-Slice/index";
 const Shop = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation(); // To read URL query params
   const { products, loading, error } = useSelector((state) => state.products);
   const { user } = useSelector((state) => state.auth);
-  const { cartLoading } = useSelector((state) => state.cart); // Optional: for button feedback
+  const { cartLoading } = useSelector((state) => state.cart);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -21,15 +22,25 @@ const Shop = () => {
   const [sortOption, setSortOption] = useState("default");
   const [filterCategory, setFilterCategory] = useState("all");
 
+  // Get search query from URL
+  const query = new URLSearchParams(location.search).get("search") || "";
+
   useEffect(() => {
     dispatch(fetchPublicProducts());
-    if (user) dispatch(fetchCart()); // Fetch cart for logged-in users
-  }, [dispatch, user]);
+    if (user) dispatch(fetchCart());
+    setCurrentPage(1); // Reset to page 1 on new search
+  }, [dispatch, user, location.search]); // Re-run when search query changes
 
   // Filter and sort products
   const filteredProducts = products
     .filter((product) =>
       filterCategory === "all" ? true : product.category === filterCategory
+    )
+    .filter((product) =>
+      query
+        ? product.name.toLowerCase().includes(query.toLowerCase()) ||
+          product.description.toLowerCase().includes(query.toLowerCase())
+        : true
     )
     .sort((a, b) => {
       if (sortOption === "priceLow") return a.price - b.price;
@@ -50,7 +61,7 @@ const Shop = () => {
 
   const handleAddToCart = (productId) => {
     if (!user) {
-      navigate("/auth"); // Redirect to login if not authenticated
+      navigate("/auth");
       return;
     }
     dispatch(addToCart({ productId, quantity: 1 }));
@@ -64,7 +75,9 @@ const Shop = () => {
   return (
     <div className="min-h-screen pt-24 px-6 bg-gray-50">
       <div className="max-w-screen-xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 text-center mb-8">🛍️ Shop Our Collection</h1>
+        <h1 className="text-4xl font-bold text-gray-900 text-center mb-8">
+          {query ? `Search Results for "${query}"` : "🛍️ Shop Our Collection"}
+        </h1>
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
           <div className="flex items-center gap-2">
             <label className="text-gray-700 font-medium">Filter by Category:</label>
@@ -95,7 +108,9 @@ const Shop = () => {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {currentProducts.length === 0 ? (
-            <p className="text-center text-gray-600 col-span-full">No products available in this category.</p>
+            <p className="text-center text-gray-600 col-span-full">
+              {query ? `No products found for "${query}"` : "No products available in this category."}
+            </p>
           ) : (
             currentProducts.map((product) => (
               <div

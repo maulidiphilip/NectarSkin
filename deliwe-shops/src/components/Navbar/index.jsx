@@ -9,8 +9,9 @@ import { logout } from "@/store/Auth-slice";
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(""); // State for search input
   const { user, role } = useSelector((state) => state.auth);
-  const { items } = useSelector((state) => state.cart); // Get cart items
+  const { items } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -28,9 +29,25 @@ export default function Navbar() {
     setMenuOpen(false);
   };
 
+  // Handle search submission
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
+      setMenuOpen(false); // Close mobile menu if open
+      setSearchQuery(""); // Clear input after search
+    }
+  };
+
+  // Handle Enter key press for search
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   const isAdmin = role === "admin";
   const isLoggedIn = !!user;
-  const cartItemCount = items.length; // Number of unique items in cart
+  const cartItemCount = items.length;
 
   return (
     <nav
@@ -45,8 +62,16 @@ export default function Navbar() {
 
         {!isAdmin && (
           <div className="hidden md:flex items-center gap-2">
-            <Input placeholder="Search products..." className="w-64" />
-            <Button variant="outline">Search</Button>
+            <Input
+              placeholder="Search products..."
+              className="w-64"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+            />
+            <Button variant="outline" onClick={handleSearch}>
+              Search
+            </Button>
           </div>
         )}
 
@@ -152,8 +177,16 @@ export default function Navbar() {
                   <LogOut size={20} /> Logout
                 </Button>
               )}
-              <Input placeholder="Search..." className="w-full" />
-              <Button variant="outline" className="w-full">Search</Button>
+              <Input
+                placeholder="Search..."
+                className="w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <Button variant="outline" className="w-full" onClick={handleSearch}>
+                Search
+              </Button>
             </>
           )}
         </div>
