@@ -1,15 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// const API_URL = "http://localhost:6060";
-const API_URL = "https://shop-backend-lwk9.onrender.com";
-
 // Public fetch all products
 export const fetchPublicProducts = createAsyncThunk(
   "products/fetchPublic",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/api/products/`);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/products/`
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -22,7 +21,9 @@ export const fetchProductById = createAsyncThunk(
   "products/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${API_URL}/api/products/${id}`);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/products/${id}`
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -36,9 +37,12 @@ export const fetchProducts = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      const response = await axios.get(`${API_URL}/api/products/`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/products/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -58,15 +62,20 @@ export const createProduct = createAsyncThunk(
       formData.append("price", productData.price);
       formData.append("stock", productData.stock);
       formData.append("category", productData.category);
-      if (productData.oldPrice) formData.append("oldPrice", productData.oldPrice);
+      if (productData.oldPrice)
+        formData.append("oldPrice", productData.oldPrice);
       if (productData.image) formData.append("image", productData.image);
 
-      const response = await axios.post(`${API_URL}/api/products/create`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/products/create`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -86,15 +95,20 @@ export const updateProduct = createAsyncThunk(
       formData.append("price", productData.price);
       formData.append("stock", productData.stock);
       formData.append("category", productData.category);
-      if (productData.oldPrice !== undefined) formData.append("oldPrice", productData.oldPrice);
+      if (productData.oldPrice !== undefined)
+        formData.append("oldPrice", productData.oldPrice);
       if (productData.image) formData.append("image", productData.image);
 
-      const response = await axios.put(`${API_URL}/api/products/${id}`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/products/${id}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response.data);
@@ -108,7 +122,7 @@ export const deleteProduct = createAsyncThunk(
   async (id, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.token;
-      await axios.delete(`${API_URL}/api/products/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return id; // Return the ID to remove from state
@@ -188,7 +202,9 @@ const productSlice = createSlice({
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
-        const index = state.products.findIndex((p) => p._id === action.payload._id);
+        const index = state.products.findIndex(
+          (p) => p._id === action.payload._id
+        );
         if (index !== -1) state.products[index] = action.payload;
       })
       .addCase(updateProduct.rejected, (state, action) => {

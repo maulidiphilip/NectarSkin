@@ -5,12 +5,22 @@ const Products = require("../../Models/Products");
 
 const createOrder = async (req, res) => {
   const userId = req.user._id;
-  const { paymentMethod } = req.body; // New field from frontend
+  const { paymentMethod } = req.body;
 
   try {
     const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ success: false, message: "Cart is empty" });
+    }
+
+    // Check stock availability for all items
+    for (const item of cart.items) {
+      if (item.productId.stock < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Insufficient stock for ${item.productId.name}. Available: ${item.productId.stock}`,
+        });
+      }
     }
 
     const order = new Order({
@@ -24,11 +34,11 @@ const createOrder = async (req, res) => {
       paymentMethod,
     });
 
-    // Only reduce stock and clear cart for instant payment methods (future, e.g., PayChangu)
+    // Reduce stock and clear cart only for instant payment (PayChangu)
     if (paymentMethod === "PayChangu") {
       await Promise.all(
         cart.items.map(async (item) => {
-          const product = await Product.findById(item.productId);
+          const product = await Products.findById(item.productId._id);
           product.stock -= item.quantity;
           await product.save();
         })
@@ -56,12 +66,9 @@ const getOrders = async (req, res) => {
   }
 };
 
-
-
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find().populate("items.productId");
-    // console.log("Fetched all orders:", orders); // Debug log
     res.status(200).json({ success: true, data: orders });
   } catch (error) {
     console.error("Error fetching all orders:", error);
@@ -82,7 +89,7 @@ const updateOrderStatus = async (req, res) => {
       await Cart.deleteOne({ userId: order.userId });
       await Promise.all(
         order.items.map(async (item) => {
-          const product = await Product.findById(item.productId);
+          const product = await Products.findById(item.productId);
           product.stock -= item.quantity;
           await product.save();
         })

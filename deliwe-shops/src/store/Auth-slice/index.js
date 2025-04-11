@@ -1,15 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// const API_URL = "http://localhost:6060";
-const API_URL = "https://shop-backend-lwk9.onrender.com";
-
 export const register = createAsyncThunk(
   "auth/register",
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        `${API_URL}/api/auth/register`,
+        `${import.meta.env.VITE_API_URL}/api/auth/register`,
         credentials
       );
       return response.data;
@@ -23,7 +20,10 @@ export const login = createAsyncThunk(
   "auth/login",
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, credentials);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        credentials
+      );
       const { accessToken, user } = response.data.data;
       localStorage.setItem("token", accessToken); // Only store token
       return { token: accessToken, user };
@@ -39,14 +39,19 @@ export const checkAuth = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No token found");
-      const response = await axios.get(`${API_URL}/api/auth/check-auth`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/auth/check-auth`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return { token, user: response.data.data.user };
     } catch (error) {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
-      return rejectWithValue(error.response?.data || { message: "Not authenticated" });
+      return rejectWithValue(
+        error.response?.data || { message: "Not authenticated" }
+      );
     }
   }
 );
@@ -93,8 +98,10 @@ const authSlice = createSlice({
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload?.message || action.error?.message || "Login failed";
-      }) .addCase(checkAuth.pending, (state) => {
+        state.error =
+          action.payload?.message || action.error?.message || "Login failed";
+      })
+      .addCase(checkAuth.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
